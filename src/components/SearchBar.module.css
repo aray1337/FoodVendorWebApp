@@ -1,0 +1,20 @@
+.searchBarContainer {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+}
+
+.searchBarInput {
+  flex: 1;
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 0 10px;
+  font-size: 16px;
+  outline: none;
+}
+
+.searchBarInput:focus {
+  border-color: #0098FF;
+  box-shadow: 0 0 0 2px rgba(0, 152, 255, 0.2);
+}
