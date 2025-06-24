@@ -47,68 +47,99 @@
   align-items: center;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 1000;
+  padding: 20px;
 }
 
 .modalView {
   background-color: white;
-  padding: 15px;
-  border-radius: 10px;
+  padding: 24px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  min-width: 300px;
-  max-width: 90vw;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+  min-width: 280px;
+  margin: 0 auto;
 }
 
 .editModalView {
   background-color: white;
-  padding: 20px;
-  border-radius: 7px;
+  padding: 24px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
-  min-width: 300px;
-  max-width: 90vw;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+  min-width: 280px;
+  margin: 0 auto;
 }
 
 .button {
-  border-radius: 5px;
-  border-bottom-right-radius: 20px;
-  border-bottom-left-radius: 20px;
-  padding: 10px;
-  padding-left: 40px;
-  padding-right: 40px;
-  margin: 0 5px;
+  border-radius: 8px;
+  padding: 12px 24px;
+  width: 100%;
+  max-width: 200px;
   background-color: #2196F3;
   color: white;
   border: none;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.button:hover {
+  background-color: #1976D2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
 }
 
 .saveButton {
-  justify-content: center;
-  margin: 7px;
-  border-radius: 5px;
-  border-top-right-radius: 20px;
-  padding: 10px;
-  margin: 0 5px;
+  flex: 1;
+  border-radius: 8px;
+  padding: 12px 20px;
+  margin-right: 8px;
   background-color: #2196F3;
   color: white;
   border: none;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.saveButton:hover {
+  background-color: #1976D2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
 }
 
 .deleteButton {
-  margin: 7px;
-  border-radius: 5px;
-  border-bottom-left-radius: 20px;
-  padding: 10px;
-  margin: 0 5px;
-  background-color: #ff5050;
+  border-radius: 8px;
+  padding: 12px;
+  margin-left: 8px;
+  background-color: #f44336;
   color: white;
   border: none;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+  min-width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteButton:hover {
+  background-color: #d32f2f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
 }
 
 .textStyle {
@@ -119,45 +150,54 @@
 }
 
 .modalText {
-  font-size: 25px;
+  font-size: 20px;
   text-align: center;
-  font-weight: bold;
-  margin-bottom: 15px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+  line-height: 1.4;
 }
 
 .input {
-  margin: 6px;
-  border: 3px solid #ccc;
-  font-weight: bold;
-  border-radius: 5px;
-  border-top-right-radius: 20px;
-  border-top-left-radius: 20px;
+  width: 100%;
+  max-width: 200px;
+  border: 2px solid #e0e0e0;
+  font-weight: 500;
+  border-radius: 8px;
   text-align: center;
-  padding: 5px 45px;
-  font-size: 16px;
+  padding: 12px 16px;
+  font-size: 18px;
   outline: none;
-  width: 200px;
+  margin-bottom: 20px;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  border-color: #2196F3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
 }
 
 .buttonError {
-  border-radius: 5px;
-  border-bottom-right-radius: 20px;
-  border-bottom-left-radius: 20px;
-  padding: 10px;
-  padding-left: 40px;
-  padding-right: 40px;
-  margin: 0 5px;
-  background-color: #ccc;
+  border-radius: 8px;
+  padding: 12px 24px;
+  width: 100%;
+  max-width: 200px;
+  background-color: #bdbdbd;
   color: white;
   border: none;
   cursor: not-allowed;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  font-size: 16px;
+  font-weight: 600;
+  opacity: 0.7;
 }
 
 .buttonContainer {
   display: flex;
-  justify-content: space-around;
-  margin-top: 15px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0;
+  width: 100%;
+  gap: 8px;
 }
 
 .brand {
@@ -185,12 +225,10 @@
 }
 
 .modalTitle {
-  text-decoration: underline;
   font-size: 16px;
   color: #0098FF;
   background: none;
   border: none;
-  cursor: pointer;
 }
 
 .modalHeader {
@@ -210,52 +248,80 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 1000;
+  padding: 20px;
 }
 
 .modalContent {
   background-color: white;
-  min-width: 250px;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+  min-width: 280px;
+  margin: 0 auto;
 }
 
 .AddInput {
-  text-align: center;
-  color: #0098FF;
-  padding: 7px 2px;
-  border-radius: 7px;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-  border: 1px solid #0098FF;
-  outline: none;
   width: 100%;
-  margin-bottom: 0;
+  border: 2px solid #e0e0e0;
+  font-weight: 500;
+  border-radius: 8px;
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 16px;
+  outline: none;
+  margin-bottom: 20px;
+  transition: border-color 0.2s ease;
+  color: #333;
+}
+
+.AddInput:focus {
+  border-color: #2196F3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
 }
 
 .AddButton {
-  background-color: #0098FF;
-  border-top-right-radius: 0;
-  border-top-left-radius: 0;
-  border-radius: 7px;
-  padding: 7px;
+  background-color: #2196F3;
+  border-radius: 8px;
+  padding: 12px 24px;
   color: white;
   border: none;
   cursor: pointer;
   width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.AddButton:hover {
+  background-color: #1976D2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
 }
 
 .EditInput {
-  text-align: center;
-  color: #0098FF;
-  padding: 7px;
-  border-radius: 7px;
-  border: 1px solid #0098FF;
-  outline: none;
   width: 100%;
-  margin-bottom: 15px;
+  border: 2px solid #e0e0e0;
+  font-weight: 500;
+  border-radius: 8px;
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 16px;
+  outline: none;
+  margin-bottom: 20px;
+  transition: border-color 0.2s ease;
+  color: #333;
+}
+
+.EditInput:focus {
+  border-color: #2196F3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
 }
 
 .floatingButton {
@@ -356,14 +422,23 @@
 }
 
 .dropdown {
-  height: 50px;
-  border: 0.5px solid gray;
-  border-radius: 8px;
-  padding: 0 8px;
-  margin-bottom: 10px;
   width: 100%;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
   outline: none;
   font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  transition: border-color 0.2s ease;
+  background-color: white;
+  cursor: pointer;
+}
+
+.dropdown:focus {
+  border-color: #2196F3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
 }
 
 .modalButton {
@@ -442,13 +517,64 @@ input:checked + .slider:before {
   .modalView,
   .editModalView,
   .modalContent {
-    margin: 20px;
-    max-width: calc(100vw - 40px);
+    margin: 16px;
+    max-width: calc(100vw - 32px);
+    min-width: 260px;
   }
 
   .input {
-    width: 150px;
-    padding: 5px 30px;
+    max-width: 180px;
+    padding: 10px 14px;
+    font-size: 16px;
+  }
+
+  .modalText {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .button {
+    max-width: 180px;
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+
+  .buttonError {
+    max-width: 180px;
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+
+  .saveButton {
+    padding: 10px 16px;
+    font-size: 15px;
+  }
+
+  .deleteButton {
+    padding: 10px;
+    min-width: 44px;
+  }
+
+  .EditInput {
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+
+  .AddInput {
+    padding: 10px 14px;
+    font-size: 15px;
+    margin-bottom: 16px;
+  }
+
+  .AddButton {
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+
+  .dropdown {
+    padding: 10px 14px;
+    font-size: 15px;
+    margin-bottom: 12px;
   }
 
   .category {

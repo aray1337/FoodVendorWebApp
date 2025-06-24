@@ -29,8 +29,6 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
   const [selectedItems, setSelectedItems] = useState({}); 
   // Formatted list state
   const [formattedList, setFormattedList] = useState([]); 
-  // Show formatted list state
-  const [showFormattedList, setShowFormattedList] = useState(false);
   // Colored categories state
   const [coloredCategories, setColoredCategories] = useState([]);
   // Input reference
@@ -367,68 +365,94 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
     const handleAddItem = () => {
       if (newItemInput.trim() !== '') {
-        const categoryIndex = filteredFoodItems.findIndex(
+        // Find the category in coloredCategories (the source of truth)
+        const categoryIndex = coloredCategories.findIndex(
           (item) => item.category === selectedCategory
         );
 
         if (categoryIndex !== -1) {
-          setFilteredFoodItems((prevItems) => {
-            const updatedItems = [...prevItems];
-            const categoryToUpdate = updatedItems[categoryIndex];
+          const updatedColoredCategories = [...coloredCategories];
+          const categoryToUpdate = updatedColoredCategories[categoryIndex];
 
-            if (categoryToUpdate && categoryToUpdate.items) {
-              if (selectedSubcategory) {
-                const subCategoryItem = categoryToUpdate.items.find(
-                  (item) =>
-                    typeof item === 'object' &&
-                    Object.keys(item)[0] === selectedSubcategory
-                );
+          if (categoryToUpdate && categoryToUpdate.items) {
+            if (selectedSubcategory) {
+              const subCategoryItem = categoryToUpdate.items.find(
+                (item) =>
+                  typeof item === 'object' &&
+                  Object.keys(item)[0] === selectedSubcategory
+              );
 
-                if (subCategoryItem) {
-                  const subItems = [...subCategoryItem[selectedSubcategory]];
-                  const insertAt =
-                    selectedInsertIndex !== null
-                      ? selectedInsertIndex
-                      : subItems.length;
-                  subItems.splice(insertAt, 0, newItemInput);
-
-                  categoryToUpdate.items = categoryToUpdate.items.map((item) => {
-                    if (
-                      typeof item === 'object' &&
-                      Object.keys(item)[0] === selectedSubcategory
-                    ) {
-                      return { [selectedSubcategory]: subItems };
-                    } else {
-                      return item;
-                    }
-                  });
-                } else {
-                  console.warn(
-                    `Subcategory '${selectedSubcategory}' not found in category '${selectedCategory}'`
-                  );
-                }
-              } else {
+              if (subCategoryItem) {
+                const subItems = [...subCategoryItem[selectedSubcategory]];
                 const insertAt =
                   selectedInsertIndex !== null
-                    ? selectedInsertIndex - 1
-                    : categoryToUpdate.items.length;
-                categoryToUpdate.items.splice(insertAt, 0, newItemInput);
+                    ? selectedInsertIndex
+                    : subItems.length;
+                subItems.splice(insertAt, 0, newItemInput);
+
+                categoryToUpdate.items = categoryToUpdate.items.map((item) => {
+                  if (
+                    typeof item === 'object' &&
+                    Object.keys(item)[0] === selectedSubcategory
+                  ) {
+                    return { [selectedSubcategory]: subItems };
+                  } else {
+                    return item;
+                  }
+                });
+              } else {
+                console.warn(
+                  `Subcategory '${selectedSubcategory}' not found in category '${selectedCategory}'`
+                );
               }
             } else {
-              console.warn(`'items' array not found in category '${categoryToUpdate?.category || selectedCategory}'`);
+              const insertAt =
+                selectedInsertIndex !== null
+                  ? selectedInsertIndex - 1
+                  : categoryToUpdate.items.length;
+              categoryToUpdate.items.splice(insertAt, 0, newItemInput);
             }
+          } else {
+            console.warn(`'items' array not found in category '${categoryToUpdate?.category || selectedCategory}'`);
+          }
 
-            storage.save({
-              key: 'foodItems',
-              data: updatedItems,
-              expires: null,
-            }).then(() => {
-              setFilteredFoodItems(updatedItems);
-              console.log('Food items saved to storage');
-            }).catch(error => {
-              console.error('Error saving food items to storage:', error);
-            });
-            return updatedItems;
+          // Update both states synchronously
+          setColoredCategories(updatedColoredCategories);
+          
+          // If there's an active search, re-apply it, otherwise use the full list
+          if (searchQuery.trim() === '') {
+            setFilteredFoodItems([...updatedColoredCategories]);
+          } else {
+            // Re-apply search filter to updated data
+            const filteredItems = updatedColoredCategories.map((category) => {
+              const matchingItems = category.items.filter((item) => {
+                if (typeof item === 'object') {
+                  const [subcatName, subcatItems] = Object.entries(item)[0];
+                  return subcatName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         subcatItems.some(subItem => subItem.toLowerCase().includes(searchQuery.toLowerCase()));
+                } else {
+                  return item.toLowerCase().includes(searchQuery.toLowerCase());
+                }
+              });
+
+              if (matchingItems.length > 0) {
+                return { ...category, items: matchingItems };
+              } else {
+                return null;
+              }
+            }).filter(Boolean);
+            setFilteredFoodItems(filteredItems);
+          }
+
+          // Save to storage
+          storage.save({
+            key: 'foodItems',
+            data: updatedColoredCategories,
+            expires: null,
+          }).then(() => {
+            console.log('Food items saved to storage');
+          }).catch(error => {
+            console.error('Error saving food items to storage:', error);
           });
         } 
 
@@ -657,7 +681,9 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
       if (modalVisible && inputRef.current) {
         setTimeout(() => {
           inputRef.current.focus();
-        }, 100); 
+          // Trigger click to ensure mobile number pad opens
+          inputRef.current.click();
+        }, 300); 
       }
     }, [modalVisible]);
 
@@ -715,7 +741,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
         <div className={styles.modalView}>
           <p className={styles.modalText}>
             How much{' '}
-            <span style={{ fontStyle: 'italic', fontWeight: 'bold', color: color}}>
+            <span style={{ fontWeight: 'bold', color: color}}>
               {selectedItem}
             </span>
             ?
@@ -726,10 +752,15 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
             onChange={handleChangeQuantity}
             value={quantity}
             type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
             max="99"
+            min="1"
             onBlur={handleConfirm}
             onKeyPress={handleKeyPress}
             ref={inputRef}
+            autoFocus
+            placeholder="0"
           />
           <div className={styles.buttonContainer}>
             <button
@@ -747,9 +778,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
   const FormattedListModal = () => {
     return (
-      <div
-        className={`${styles.bottomSheetContainer} ${showFormattedList ? styles.expanded : ''}`}
-      >
+      <div className={`${styles.bottomSheetContainer} ${styles.expanded}`}>
         <div className={styles.modalView}>
           <div className={styles.modalHeader}>
             <label className={styles.switchContainer}>
@@ -761,25 +790,16 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
               />
               <span className={styles.slider}></span>
             </label>
-            <button onClick={toggleBottomSheet} className={styles.modalButton}>
-              <span className={styles.modalTitle}>
-                {isTomorrowList ? "Tomorrow's List:" : "Today's List:"}
-              </span>
-            </button>
+            <span className={styles.modalTitle}>
+              {isTomorrowList ? "Tomorrow's List:" : "Today's List:"}
+            </span>
           </div>
-          {showFormattedList && (
-            <div className={styles.modalList}>
-              <pre>{formattedList}</pre>
-            </div>
-          )}
+          <div className={styles.modalList}>
+            <pre>{formattedList}</pre>
+          </div>
         </div>
       </div>
     );
-  };
-
-  const toggleBottomSheet = () => {
-    formatFoodList();
-    setShowFormattedList(!showFormattedList);
   };
 
   const shareFoodList = async () => {
