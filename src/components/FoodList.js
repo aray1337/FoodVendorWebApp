@@ -398,6 +398,42 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
       }
     }, [filteredFoodItems]);
 
+    // Get available positions based on selected category and subcategory
+    const getAvailablePositions = () => {
+      if (!selectedCategory) return [];
+      
+      const category = coloredCategories.find(cat => cat.category === selectedCategory);
+      if (!category) return [];
+
+      if (selectedSubcategory) {
+        const subCategoryItem = category.items.find(
+          item => typeof item === 'object' && Object.keys(item)[0] === selectedSubcategory
+        );
+        if (subCategoryItem) {
+          const subItems = subCategoryItem[selectedSubcategory];
+          return [
+            { value: 0, label: `At beginning` },
+            ...subItems.map((item, index) => ({
+              value: index + 1,
+              label: `After "${item}"`
+            }))
+          ];
+        }
+      } else {
+        return [
+          { value: 0, label: `At beginning of ${selectedCategory}` },
+          ...category.items.map((item, index) => {
+            const itemName = typeof item === 'object' ? Object.keys(item)[0] : item;
+            return {
+              value: index + 1,
+              label: `After "${itemName}"`
+            };
+          })
+        ];
+      }
+      return [];
+    };
+
     const handleAddItem = () => {
       if (newItemInput.trim() !== '') {
         // Save current scroll position
@@ -446,7 +482,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
             } else {
               const insertAt =
                 selectedInsertIndex !== null
-                  ? selectedInsertIndex - 1
+                  ? selectedInsertIndex
                   : categoryToUpdate.items.length;
               categoryToUpdate.items.splice(insertAt, 0, newItemInput);
             }
@@ -558,6 +594,19 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
                 })}
             </select>
           )}
+
+          <select 
+            className={styles.dropdown}
+            value={selectedInsertIndex || ''}
+            onChange={(e) => setSelectedInsertIndex(e.target.value ? parseInt(e.target.value) : null)}
+          >
+            <option value="">At end (default)</option>
+            {getAvailablePositions().map(position => (
+              <option key={position.value} value={position.value}>
+                {position.label}
+              </option>
+            ))}
+          </select>
 
           <input
             className={styles.AddInput}
