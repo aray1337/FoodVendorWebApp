@@ -12,7 +12,7 @@
 }
 
 .category {
-  font-size: 20px;
+  font-size: 24px;
   padding: 10px;
   font-weight: bold;
   padding-bottom: 2px;
@@ -44,7 +44,7 @@
 
 .item {
   color: #fff;
-  font-size: 16px;
+  font-size: 20px;
   margin-right: 10px;
 }
 
@@ -213,7 +213,7 @@
 }
 
 .brand {
-  font-size: 18px;
+  font-size: 22px;
   padding: 10px;
   padding-bottom: 3px;
   font-weight: bold;
@@ -222,7 +222,7 @@
 
 .scrollContainer {
   flex: 1;
-  padding-bottom: 80px;
+  padding-bottom: 300px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -592,14 +592,14 @@ input:checked + .slider:before {
   }
 
   .category {
-    font-size: 18px;
+    font-size: 22px;
   }
 
   .brand {
-    font-size: 16px;
+    font-size: 20px;
   }
 
   .item {
-    font-size: 14px;
+    font-size: 18px;
   }
 }

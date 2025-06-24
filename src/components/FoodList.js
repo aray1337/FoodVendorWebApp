@@ -33,6 +33,10 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
   const [coloredCategories, setColoredCategories] = useState([]);
   // Input reference
   const inputRef = useRef(null);
+  // Scroll container reference
+  const scrollContainerRef = useRef(null);
+  // Saved scroll position reference
+  const savedScrollPosition = useRef(0);
   // Search history state
   const [searchHistory, setSearchHistory] = useState([]);
   // Is list dirty state
@@ -185,6 +189,13 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
     if (isListDirty) { 
       formatFoodList();
       setIsListDirty(false);
+      
+      // Restore scroll position after list formatting is complete
+      setTimeout(() => {
+        if (scrollContainerRef.current && savedScrollPosition.current > 0) {
+          scrollContainerRef.current.scrollTop = savedScrollPosition.current;
+        }
+      }, 0);
     }
   }, [isListDirty])
 
@@ -193,6 +204,9 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
   };
 
   const handleLongPressItem = (item) => {
+    // Save current scroll position before opening edit modal
+    savedScrollPosition.current = scrollContainerRef.current?.scrollTop || 0;
+    
     setEditingItem(item);
     setEditedItemName(item);
     setEditModalVisible(true);
@@ -245,6 +259,13 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
         setEditingItem(null);
         setEditModalVisible(false);
+        
+        // Restore scroll position after edit modal closes
+        setTimeout(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = savedScrollPosition.current;
+          }
+        }, 0);
       }
     };
 
@@ -289,6 +310,13 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
       setEditingItem(null);
       setEditModalVisible(false);
+      
+      // Restore scroll position after delete
+      setTimeout(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = savedScrollPosition.current;
+        }
+      }, 0);
     };
 
     const handleChangeEditInput = (event) => {
@@ -298,6 +326,13 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
     const handleModalClick = (e) => {
       if (e.target === e.currentTarget) {
         setEditModalVisible(false);
+        
+        // Restore scroll position when edit modal is dismissed
+        setTimeout(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = savedScrollPosition.current;
+          }
+        }, 0);
       }
     };
 
@@ -365,6 +400,9 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
     const handleAddItem = () => {
       if (newItemInput.trim() !== '') {
+        // Save current scroll position
+        const currentScrollPosition = scrollContainerRef.current?.scrollTop || 0;
+        
         // Find the category in coloredCategories (the source of truth)
         const categoryIndex = coloredCategories.findIndex(
           (item) => item.category === selectedCategory
@@ -454,6 +492,13 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
           }).catch(error => {
             console.error('Error saving food items to storage:', error);
           });
+
+          // Restore scroll position after state update
+          setTimeout(() => {
+            if (scrollContainerRef.current) {
+              scrollContainerRef.current.scrollTop = currentScrollPosition;
+            }
+          }, 0);
         } 
 
         setNewItemInput('');
@@ -466,6 +511,13 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
     const handleModalClick = (e) => {
       if (e.target === e.currentTarget) {
         setIsModalVisible(false);
+        
+        // Restore scroll position when add modal is dismissed
+        setTimeout(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = savedScrollPosition.current;
+          }
+        }, 0);
       }
     };
 
@@ -522,10 +574,16 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
   };
 
   const AddButton = () => {
+    const handleAddButtonClick = () => {
+      // Save current scroll position before opening add modal
+      savedScrollPosition.current = scrollContainerRef.current?.scrollTop || 0;
+      setIsModalVisible(true);
+    };
+
     return (
       <button 
         className={`${styles.floatingButton} ${styles.addButton}`}
-        onClick={() => setIsModalVisible(true)}
+        onClick={handleAddButtonClick}
         style={{ opacity: buttonOpacity }}
       >
         <Image src="/add-icon.png" alt="Add" width={25} height={25} className={styles.addButtonIcon} />
@@ -577,10 +635,20 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
     const foodName = typeof food === 'object' ? Object.keys(food)[0] : food;
     console.log(foodName)
 
+    // Save current scroll position in ref before opening modal
+    savedScrollPosition.current = scrollContainerRef.current?.scrollTop || 0;
+    
     setColor(itemColor); 
     setSelectedItem(foodName);
     setModalVisible(true);
-  }; 
+    
+    // Immediately restore scroll position to prevent any jump when modal opens
+    setTimeout(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = savedScrollPosition.current;
+      }
+    }, 0);
+  };
 
   const FoodItem = memo(({ food, color, onItemPress, onItemLongPress, style, onEditPress}) => {
     const handleContextMenu = (e) => {
@@ -607,6 +675,9 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
   const FoodFlatList = () => {
     const handleEditPress = (foodItem) => {
+      // Save current scroll position before opening edit modal
+      savedScrollPosition.current = scrollContainerRef.current?.scrollTop || 0;
+      
       let itemToEdit = foodItem;
 
       if (typeof foodItem === 'object') {
@@ -621,7 +692,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
     };
 
     return (
-      <div className={styles.scrollContainer}>
+      <div className={styles.scrollContainer} ref={scrollContainerRef}>
         {filteredFoodItems.map((item, categoryIndex) => (
           <div key={`${item.category}-${categoryIndex}`}>
             <h2 className={styles.category} style={{ color: item.color, borderColor: item.color }}>
@@ -703,11 +774,25 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
         [selectedItem]: numQuantity,
       }));
       setSelectedItemsHistory((prevHistory) => [...prevHistory, { ...selectedItems }]);
-      setIsListDirty(true); 
+      setIsListDirty(true);
+      
+      // Restore scroll position after modal closes using saved position
+      setTimeout(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = savedScrollPosition.current;
+        }
+      }, 0);
     };
 
     const handleCloseModal = () => {
       setModalVisible(false);
+      
+      // Restore scroll position after modal closes using saved position
+      setTimeout(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = savedScrollPosition.current;
+        }
+      }, 0);
     };
 
     const handleChangeQuantity = (event) => {
@@ -723,7 +808,6 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
     const handleModalClick = (e) => {
       if (e.target === e.currentTarget) {
-        handleConfirm();
         handleCloseModal();
       }
     };
@@ -815,7 +899,6 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
       if (navigator.share) {
         await navigator.share({
-          title: 'Food List',
           text: message,
         });
       } else {
