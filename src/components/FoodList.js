@@ -137,7 +137,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
             "Reeses",
             { "Popsicle": ["Spiderman","Spongebob","Spacejam","Sonic","Batman","Bomb Pop","Ninja Turtle", "Snowcone",] },
             { "FrozFruit": ["Strawberry", "Coconut", "Mango", "Lime", "Pineapple"] },
-            { "Magnum": ["2x Choc", "Almond", "Caramel", "Peanut B.", "Cookie D."] },
+            { "Magnum": ["2x Choc", "Almond", "Caramel", "Peanut B.", "Cookie D.","Raspberry"] },
             { "Häagen-Dazs": ["Almond", "Dark C.", "Coffee A."] },
             {"Cup": ["Lemonade", "Strawberry"]}
           ],
