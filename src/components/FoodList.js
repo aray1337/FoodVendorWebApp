@@ -764,7 +764,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
                         key={`${foodKey}-${subIndex}`}
                         food={subcategory} 
                         color={item.color}
-                        onItemPress={() => handleItemPress(`${subcategory} ${brand}`, item.color)}
+                        onItemPress={() => handleItemPress(brand === "Popsicle" ? subcategory : `${subcategory} ${brand}`, item.color)}
                         onItemLongPress={() => handleLongPressItem(subcategory)}
                         style={styles.subItemContainer}
                         onEditPress={() => handleEditPress(subcategory)}
