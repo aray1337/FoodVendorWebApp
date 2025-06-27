@@ -91,6 +91,21 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
       }
     };
 
+    const loadSelectedItems = async () => {
+      try {
+        const storedSelectedItems = await storage.load({
+          key: 'selectedItems',
+        });
+        
+        if (storedSelectedItems) {
+          setSelectedItems(storedSelectedItems);
+          setIsListDirty(true);
+        }
+      } catch (error) {
+        console.log('No stored selected items found');
+      }
+    };
+
     const initializeFoodItems = () => {
       var foodData = [
         {
@@ -183,6 +198,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
     };
 
     loadFoodItems();
+    loadSelectedItems();
   }, []);
 
   useEffect(() => {
@@ -198,6 +214,23 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
       }, 0);
     }
   }, [isListDirty])
+
+  // Save selected items to storage whenever they change
+  useEffect(() => {
+    const saveSelectedItems = async () => {
+      try {
+        await storage.save({
+          key: 'selectedItems',
+          data: selectedItems,
+          expires: null,
+        });
+      } catch (error) {
+        console.error('Error saving selected items:', error);
+      }
+    };
+
+    saveSelectedItems();
+  }, [selectedItems]);
 
   const toggleListType = () => {
     setIsTomorrowList(!isTomorrowList);
@@ -954,6 +987,23 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
         await navigator.clipboard.writeText(message);
         alert('Food list copied to clipboard!');
       }
+
+      // Clear the selected items and history after successful sharing
+      setSelectedItems({});
+      setSelectedItemsHistory([]);
+      setIsListDirty(true);
+      
+      // Clear from storage as well
+      try {
+        await storage.save({
+          key: 'selectedItems',
+          data: {},
+          expires: null,
+        });
+      } catch (error) {
+        console.error('Error clearing selected items from storage:', error);
+      }
+      
     } catch (error) {
       alert('Empty Food List. Add food items before sharing.');
     }
