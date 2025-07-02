@@ -832,7 +832,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
                         key={`${foodKey}-${subIndex}`}
                         food={subcategory} 
                         color={item.color}
-                        onItemPress={() => handleItemPress(brand === "Popsicle" ? subcategory : `${subcategory} ${brand}`, item.color)}
+                        onItemPress={() => handleItemPress(brand === "Popsicle" ? subcategory : `${brand} ${subcategory}`, item.color)}
                         onItemLongPress={() => handleLongPressItem(subcategory)}
                         style={styles.subItemContainer}
                         onEditPress={() => handleEditPress(subcategory)}
@@ -980,7 +980,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
   const FormattedListModal = () => {
     return (
       <div className={`${styles.bottomSheetContainer} ${styles.expanded}`}>
-        <div className={styles.modalView}>
+        <div className={styles.modalView} style={{ maxHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
           <div className={styles.modalHeader}>
             <label className={styles.switchContainer}>
               <input
@@ -995,8 +995,14 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
               {isTomorrowList ? "Tomorrow's List:" : "Today's List:"}
             </span>
           </div>
-          <div className={styles.modalList}>
-            <pre>{formattedList}</pre>
+          <div className={styles.modalList} style={{ 
+            overflowY: 'auto', 
+            flex: 1, 
+            maxHeight: 'calc(30vh - 80px)', 
+            padding: '10px',
+            
+          }}>
+            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{formattedList}</pre>
           </div>
         </div>
       </div>
@@ -1105,8 +1111,8 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
       setUndoClickCount(0);
     }, 2000);
     
-    // If user clicked undo 3 times rapidly, offer to clear the list
-    if (undoClickCount >= 2) {
+    // If user clicked undo 4 times rapidly, offer to clear the list
+    if (undoClickCount >= 4) {
       if (confirm('You\'ve clicked undo multiple times. Would you like to clear the entire food list?')) {
         setSelectedItems({});
         setSelectedItemsHistory([]);
