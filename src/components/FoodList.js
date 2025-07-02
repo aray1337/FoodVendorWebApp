@@ -60,6 +60,9 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
   // Is loading state
   const [isLoading, setIsLoading] = useState(true);
   const [isTomorrowList, setIsTomorrowList] = useState(true);
+  // Undo click tracking
+  const [undoClickCount, setUndoClickCount] = useState(0);
+  const undoClickTimer = useRef(null);
 
   const resetStorage = async () => {
     try {
@@ -103,6 +106,20 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
         }
       } catch (error) {
         console.log('No stored selected items found');
+      }
+    };
+
+    const loadSelectedItemsHistory = async () => {
+      try {
+        const storedHistory = await storage.load({
+          key: 'selectedItemsHistory',
+        });
+        
+        if (storedHistory && Array.isArray(storedHistory)) {
+          setSelectedItemsHistory(storedHistory);
+        }
+      } catch (error) {
+        console.log('No stored selected items history found');
       }
     };
 
@@ -199,6 +216,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
     loadFoodItems();
     loadSelectedItems();
+    loadSelectedItemsHistory();
   }, []);
 
   useEffect(() => {
@@ -231,6 +249,23 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
     saveSelectedItems();
   }, [selectedItems]);
+
+  // Save selected items history to storage whenever it changes
+  useEffect(() => {
+    const saveSelectedItemsHistory = async () => {
+      try {
+        await storage.save({
+          key: 'selectedItemsHistory',
+          data: selectedItemsHistory,
+          expires: null,
+        });
+      } catch (error) {
+        console.error('Error saving selected items history:', error);
+      }
+    };
+
+    saveSelectedItemsHistory();
+  }, [selectedItemsHistory]);
 
   const toggleListType = () => {
     setIsTomorrowList(!isTomorrowList);
@@ -1000,6 +1035,11 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
           data: {},
           expires: null,
         });
+        await storage.save({
+          key: 'selectedItemsHistory',
+          data: [],
+          expires: null,
+        });
       } catch (error) {
         console.error('Error clearing selected items from storage:', error);
       }
@@ -1052,6 +1092,48 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
       return;
     }
 
+    // Track rapid undo clicks
+    setUndoClickCount(prev => prev + 1);
+    
+    // Clear the timer if it exists
+    if (undoClickTimer.current) {
+      clearTimeout(undoClickTimer.current);
+    }
+    
+    // Set a timer to reset the count after 2 seconds
+    undoClickTimer.current = setTimeout(() => {
+      setUndoClickCount(0);
+    }, 2000);
+    
+    // If user clicked undo 3 times rapidly, offer to clear the list
+    if (undoClickCount >= 2) {
+      if (confirm('You\'ve clicked undo multiple times. Would you like to clear the entire food list?')) {
+        setSelectedItems({});
+        setSelectedItemsHistory([]);
+        setIsListDirty(true);
+        setUndoClickCount(0);
+        
+        // Clear from storage as well
+        storage.save({
+          key: 'selectedItems',
+          data: {},
+          expires: null,
+        }).then(() => {
+          storage.save({
+            key: 'selectedItemsHistory',
+            data: [],
+            expires: null,
+          });
+        }).catch(error => {
+          console.error('Error clearing selected items from storage:', error);
+        });
+        
+        return;
+      } else {
+        setUndoClickCount(0);
+      }
+    }
+
     const previousState = selectedItemsHistory[selectedItemsHistory.length - 1];
     setSelectedItems(previousState);
     setSelectedItemsHistory(selectedItemsHistory.slice(0, -1));
@@ -1063,7 +1145,22 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
     if (confirm('Are you sure you want to clear the entire food list?')) {
       setSelectedItems({}); 
       setSelectedItemsHistory([]);
-      setIsListDirty(true); 
+      setIsListDirty(true);
+      
+      // Clear from storage as well
+      storage.save({
+        key: 'selectedItems',
+        data: {},
+        expires: null,
+      }).then(() => {
+        storage.save({
+          key: 'selectedItemsHistory',
+          data: [],
+          expires: null,
+        });
+      }).catch(error => {
+        console.error('Error clearing selected items from storage:', error);
+      });
     }
   };
 
