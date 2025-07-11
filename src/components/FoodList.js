@@ -145,7 +145,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
             "Sparkling Water",
             "Vitamin Water",
             "Red Bull",
-            { "Gatorade": ["Red", "Lime", "Orange", "Blue"] },
+            { "Gatorade": ["Red", "Lime", "Orange", "Blue","Mix"] },
             { "Snapple": ["Peach", "Lemon", "Kiwi", "Diet Peach", "Diet Lemon"] },
             { "Soda": ["Coke", "Diet Coke", "Sprite", "Lemonade", "Fanta", "Pepsi", "Coke Zero", "Diet Pepsi"] },
             { "Can": ["Coke", "Diet Coke", "Sprite", "Fanta"] },
@@ -1171,110 +1171,145 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
   };
 
   const formatFoodList = () => {
-    const formattedItems = {};
+    const orderedItems = [];
+    const groupedCategories = {};
+    const processedGroups = new Set();
 
+    // First pass: identify grouped items and preserve order
     for (const [originalItemName, quantity] of Object.entries(selectedItems)) {
       if (quantity > 0) {
         const parts = originalItemName.split(' ');
-        let brand = parts.slice(-1)[0];
-        let subcategory = parts.slice(0, -1).join(' ');
-        let itemName = originalItemName;
+        let brand = parts[0];
+        let subcategory = parts.slice(1).join(' ');
 
-        let categoryName = subcategory ? subcategory : brand;
-      
-        itemName = subcategory;
-        categoryName = brand; 
+        // Check if this is a subcategory item (has both brand and subcategory)
+        const isSubcategoryItem = filteredFoodItems.some(
+          (category) =>
+            category.items.some(
+              (item) =>
+                typeof item === 'object' && Object.keys(item)[0] === brand
+            )
+        );
 
-        if (
-          filteredFoodItems.some(
+        if (isSubcategoryItem && subcategory) {
+          // This is a subcategory item, group it under the main category
+          if (!groupedCategories[brand]) {
+            groupedCategories[brand] = {};
+          }
+          groupedCategories[brand][subcategory] = quantity;
+
+          // Add to ordered list only if this brand hasn't been processed yet
+          if (!processedGroups.has(brand)) {
+            orderedItems.push({ type: 'group', brand: brand });
+            processedGroups.add(brand);
+          }
+        } else {
+          // This is a regular item, add it directly to ordered list
+          orderedItems.push({ type: 'item', name: originalItemName, quantity: quantity });
+        }
+      }
+    }
+
+    // Format the final list maintaining order
+    let formattedListArray = [];
+    
+    for (const item of orderedItems) {
+      if (item.type === 'group') {
+        const brand = item.brand;
+        const subcategories = groupedCategories[brand];
+        
+        if (subcategories && Object.keys(subcategories).length > 0) {
+          // Check if this is a beverage category that should use pack logic
+          const isBeverageCategory = filteredFoodItems.some(
             (category) =>
               category.category === 'Beverages' &&
               category.items.some(
-                (item) =>
-                  typeof item === 'object' && Object.keys(item)[0] === categoryName 
+                (subItem) =>
+                  typeof subItem === 'object' && Object.keys(subItem)[0] === brand
               )
-          )
-        ) {
-          if (quantity > 3) {
-            formattedItems[categoryName] = formattedItems[categoryName] || { Pack: [{}] };
+          );
 
-            let currentPackIndex = 0;
-            let quantityCopy = quantity;
+          formattedListArray.push(`${brand}:`);
 
-            while (quantityCopy > 0) {
-              const currentPack = formattedItems[categoryName].Pack[currentPackIndex];
+          if (isBeverageCategory) {
+            // Use pack logic for beverages with quantities > 3
+            const packItems = {};
+            const regularItems = {};
 
-              let currentPackTotal = Object.values(currentPack).reduce(
-                (sum, qty) => sum + qty,
-                0
-              );
+            for (const [subcategory, quantity] of Object.entries(subcategories)) {
+              if (quantity > 3) {
+                packItems[subcategory] = quantity;
+              } else {
+                regularItems[subcategory] = quantity;
+              }
+            }
 
-              const availableSpace = 24 - currentPackTotal;
-              const amountToAdd = Math.min(quantityCopy, availableSpace);
+            // Add regular subcategory items first
+            for (const [subcategory, quantity] of Object.entries(regularItems)) {
+              formattedListArray.push(`  ${subcategory}-${quantity}`);
+            }
 
-              if (amountToAdd > 0) {
-                const abbreviation = itemName
-                  .split(' ')
-                  .filter(word => word !== "Can")
-                  .map((word) => word[0].toUpperCase())
-                  .join('.');
+            // Add pack items
+            const packEntries = Object.entries(packItems);
+            if (packEntries.length > 0) {
+              // Group pack items into 24-count packs
+              const packGroups = [{}];
+              let currentPackIndex = 0;
 
-                currentPack[abbreviation] = (currentPack[abbreviation] || 0) + amountToAdd;
-                quantityCopy -= amountToAdd;
+              for (const [subcategory, quantity] of packEntries) {
+                let remainingQuantity = quantity;
+
+                while (remainingQuantity > 0) {
+                  const currentPack = packGroups[currentPackIndex];
+                  const currentPackTotal = Object.values(currentPack).reduce((sum, qty) => sum + qty, 0);
+                  const availableSpace = 24 - currentPackTotal;
+                  const amountToAdd = Math.min(remainingQuantity, availableSpace);
+
+                  if (amountToAdd > 0) {
+                    const abbreviation = subcategory
+                      .split(' ')
+                      .filter(word => word !== "Can")
+                      .map((word) => word[0].toUpperCase())
+                      .join('');
+
+                    currentPack[abbreviation] = (currentPack[abbreviation] || 0) + amountToAdd;
+                    remainingQuantity -= amountToAdd;
+                  }
+
+                  if (remainingQuantity > 0 && availableSpace === 0) {
+                    packGroups.push({});
+                    currentPackIndex++;
+                  }
+                }
               }
 
-              if (quantityCopy > 0 && availableSpace === 0) {
-                formattedItems[categoryName].Pack.push({});
-                currentPackIndex++;
-              }
+              // Format pack groups
+              packGroups.forEach((packContent) => {
+                const formattedPackItems = Object.entries(packContent)
+                  .filter(([initial, qty]) => qty > 0)
+                  .map(([initial, qty]) => `${initial}-${qty}`)
+                  .join('+');
 
-              if (quantityCopy === 0) {
-                break;
-              }
+                if (formattedPackItems !== "") {
+                  formattedListArray.push(`  (${formattedPackItems})-1`);
+                }
+              });
             }
           } else {
-            formattedItems[originalItemName] = quantity;
-          }
-        } else if (categoryName === "FrozFruit") {
-          formattedItems[`${brand} ${subcategory}`] = quantity;
-        } 
-        else {
-          formattedItems[originalItemName] = quantity;
-        }
-      }
-    }
-
-    let formattedListArray = [];
-    for (const [brandOrItem, quantityData] of Object.entries(formattedItems)) {
-      if (typeof quantityData === 'object' && quantityData.Pack) {
-        formattedListArray.push(`${brandOrItem}:`);
-
-        let packString = "";
-        quantityData.Pack.forEach((packContent, index) => {
-          const formattedPackItems = Object.entries(packContent)
-            .filter(([initial, qty]) => qty > 0)
-            .map(([initial, qty]) => `${initial}-${qty}`)
-            .join('+');
-
-          if (formattedPackItems !== "") {
-            packString += `(${formattedPackItems})-1`;
-            if (index < quantityData.Pack.length - 1) {
-              packString += "\n";
+            // Regular subcategory grouping for non-beverages
+            for (const [subcategory, quantity] of Object.entries(subcategories)) {
+              formattedListArray.push(`  ${subcategory}-${quantity}`);
             }
           }
-        });
-
-        if (packString !== "") {
-          formattedListArray.push(`\n${packString}`);
         }
-        formattedListArray.push('\n');
       } else {
-        formattedListArray.push(`${brandOrItem}-${quantityData}\n`);
+        // Regular item
+        formattedListArray.push(`${item.name}-${item.quantity}`);
       }
     }
 
-    setFormattedList(formattedListArray.join(''));
-    return formattedListArray.join('');
+    setFormattedList(formattedListArray.join('\n'));
+    return formattedListArray.join('\n');
   };
 
   if (isLoading) {
