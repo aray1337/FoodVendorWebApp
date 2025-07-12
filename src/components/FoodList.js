@@ -832,7 +832,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
                         key={`${foodKey}-${subIndex}`}
                         food={subcategory} 
                         color={item.color}
-                        onItemPress={() => handleItemPress(brand === "Popsicle" ? subcategory : `${brand} ${subcategory}`, item.color)}
+                        onItemPress={() => handleItemPress(`${brand} ${subcategory}`, item.color)}
                         onItemLongPress={() => handleLongPressItem(subcategory)}
                         style={styles.subItemContainer}
                         onEditPress={() => handleEditPress(subcategory)}
@@ -1174,6 +1174,8 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
     const orderedItems = [];
     const groupedCategories = {};
     const processedGroups = new Set();
+    const iceCreamItems = [];
+    let hasIceCreamItems = false;
 
     // First pass: identify grouped items and preserve order
     for (const [originalItemName, quantity] of Object.entries(selectedItems)) {
@@ -1181,6 +1183,17 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
         const parts = originalItemName.split(' ');
         let brand = parts[0];
         let subcategory = parts.slice(1).join(' ');
+
+        // Check if this item belongs to Ice Cream category
+        const isIceCreamItem = filteredFoodItems.some(
+          (category) =>
+            category.category === 'Ice Cream' &&
+            (category.items.includes(originalItemName) ||
+             category.items.some(
+               (item) =>
+                 typeof item === 'object' && Object.keys(item)[0] === brand
+             ))
+        );
 
         // Check if this is a subcategory item (has both brand and subcategory)
         const isSubcategoryItem = filteredFoodItems.some(
@@ -1191,8 +1204,26 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
             )
         );
 
-        if (isSubcategoryItem && subcategory) {
-          // This is a subcategory item, group it under the main category
+        if (isIceCreamItem) {
+          hasIceCreamItems = true;
+          if (isSubcategoryItem && subcategory) {
+            // This is an ice cream subcategory item
+            if (!groupedCategories[brand]) {
+              groupedCategories[brand] = {};
+            }
+            groupedCategories[brand][subcategory] = quantity;
+
+            // Add to ice cream items list only if this brand hasn't been processed yet
+            if (!processedGroups.has(brand)) {
+              iceCreamItems.push({ type: 'group', brand: brand });
+              processedGroups.add(brand);
+            }
+          } else {
+            // This is a regular ice cream item
+            iceCreamItems.push({ type: 'item', name: originalItemName, quantity: quantity });
+          }
+        } else if (isSubcategoryItem && subcategory) {
+          // This is a non-ice cream subcategory item
           if (!groupedCategories[brand]) {
             groupedCategories[brand] = {};
           }
@@ -1204,7 +1235,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
             processedGroups.add(brand);
           }
         } else {
-          // This is a regular item, add it directly to ordered list
+          // This is a regular non-ice cream item
           orderedItems.push({ type: 'item', name: originalItemName, quantity: quantity });
         }
       }
@@ -1213,6 +1244,31 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
     // Format the final list maintaining order
     let formattedListArray = [];
     
+    // Add ice cream section if there are any ice cream items
+    if (hasIceCreamItems) {
+      formattedListArray.push('Ice Cream:');
+      
+      for (const item of iceCreamItems) {
+        if (item.type === 'group') {
+          const brand = item.brand;
+          const subcategories = groupedCategories[brand];
+          
+          if (subcategories && Object.keys(subcategories).length > 0) {
+            formattedListArray.push(`  ${brand}:`);
+            
+            // Regular subcategory grouping for ice cream items
+            for (const [subcategory, quantity] of Object.entries(subcategories)) {
+              formattedListArray.push(`    ${subcategory}-${quantity}`);
+            }
+          }
+        } else {
+          // Regular ice cream item
+          formattedListArray.push(`  ${item.name}-${item.quantity}`);
+        }
+      }
+    }
+    
+    // Add non-ice cream items
     for (const item of orderedItems) {
       if (item.type === 'group') {
         const brand = item.brand;
