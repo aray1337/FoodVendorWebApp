@@ -1174,8 +1174,6 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
     const orderedItems = [];
     const groupedCategories = {};
     const processedGroups = new Set();
-    const iceCreamItems = [];
-    let hasIceCreamItems = false;
 
     // First pass: identify grouped items and preserve order
     for (const [originalItemName, quantity] of Object.entries(selectedItems)) {
@@ -1204,26 +1202,8 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
             )
         );
 
-        if (isIceCreamItem) {
-          hasIceCreamItems = true;
-          if (isSubcategoryItem && subcategory) {
-            // This is an ice cream subcategory item
-            if (!groupedCategories[brand]) {
-              groupedCategories[brand] = {};
-            }
-            groupedCategories[brand][subcategory] = quantity;
-
-            // Add to ice cream items list only if this brand hasn't been processed yet
-            if (!processedGroups.has(brand)) {
-              iceCreamItems.push({ type: 'group', brand: brand });
-              processedGroups.add(brand);
-            }
-          } else {
-            // This is a regular ice cream item
-            iceCreamItems.push({ type: 'item', name: originalItemName, quantity: quantity });
-          }
-        } else if (isSubcategoryItem && subcategory) {
-          // This is a non-ice cream subcategory item
+        if (isSubcategoryItem && subcategory) {
+          // This is a subcategory item (ice cream or non-ice cream)
           if (!groupedCategories[brand]) {
             groupedCategories[brand] = {};
           }
@@ -1231,45 +1211,27 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
           // Add to ordered list only if this brand hasn't been processed yet
           if (!processedGroups.has(brand)) {
-            orderedItems.push({ type: 'group', brand: brand });
+            orderedItems.push({ type: 'group', brand: brand, isIceCream: isIceCreamItem });
             processedGroups.add(brand);
           }
         } else {
-          // This is a regular non-ice cream item
-          orderedItems.push({ type: 'item', name: originalItemName, quantity: quantity });
+          // This is a regular item (ice cream or non-ice cream)
+          orderedItems.push({ type: 'item', name: originalItemName, quantity: quantity, isIceCream: isIceCreamItem });
         }
       }
     }
 
     // Format the final list maintaining order
     let formattedListArray = [];
+    let iceCreamHeaderAdded = false;
     
-    // Add ice cream section if there are any ice cream items
-    if (hasIceCreamItems) {
-      formattedListArray.push('Ice Cream:');
-      
-      for (const item of iceCreamItems) {
-        if (item.type === 'group') {
-          const brand = item.brand;
-          const subcategories = groupedCategories[brand];
-          
-          if (subcategories && Object.keys(subcategories).length > 0) {
-            formattedListArray.push(`  ${brand}:`);
-            
-            // Regular subcategory grouping for ice cream items
-            for (const [subcategory, quantity] of Object.entries(subcategories)) {
-              formattedListArray.push(`    ${subcategory}-${quantity}`);
-            }
-          }
-        } else {
-          // Regular ice cream item
-          formattedListArray.push(`  ${item.name}-${item.quantity}`);
-        }
-      }
-    }
-    
-    // Add non-ice cream items
     for (const item of orderedItems) {
+      // Add Ice Cream header when we encounter the first ice cream item
+      if (item.isIceCream && !iceCreamHeaderAdded) {
+        formattedListArray.push('Ice Cream:');
+        iceCreamHeaderAdded = true;
+      }
+
       if (item.type === 'group') {
         const brand = item.brand;
         const subcategories = groupedCategories[brand];
@@ -1285,7 +1247,9 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
               )
           );
 
-          formattedListArray.push(`${brand}:`);
+          // Add appropriate indentation for ice cream items
+          const brandIndent = item.isIceCream ? '  ' : '';
+          formattedListArray.push(`${brandIndent}${brand}:`);
 
           if (isBeverageCategory) {
             // Use pack logic for beverages with quantities > 3
@@ -1302,7 +1266,8 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
             // Add regular subcategory items first
             for (const [subcategory, quantity] of Object.entries(regularItems)) {
-              formattedListArray.push(`  ${subcategory}-${quantity}`);
+              const itemIndent = item.isIceCream ? '    ' : '  ';
+              formattedListArray.push(`${itemIndent}${subcategory}-${quantity}`);
             }
 
             // Add pack items
@@ -1347,20 +1312,23 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
                   .join('+');
 
                 if (formattedPackItems !== "") {
-                  formattedListArray.push(`  (${formattedPackItems})-1`);
+                  const itemIndent = item.isIceCream ? '    ' : '  ';
+                  formattedListArray.push(`${itemIndent}(${formattedPackItems})-1`);
                 }
               });
             }
           } else {
             // Regular subcategory grouping for non-beverages
             for (const [subcategory, quantity] of Object.entries(subcategories)) {
-              formattedListArray.push(`  ${subcategory}-${quantity}`);
+              const itemIndent = item.isIceCream ? '    ' : '  ';
+              formattedListArray.push(`${itemIndent}${subcategory}-${quantity}`);
             }
           }
         }
       } else {
         // Regular item
-        formattedListArray.push(`${item.name}-${item.quantity}`);
+        const itemIndent = item.isIceCream ? '  ' : '';
+        formattedListArray.push(`${itemIndent}${item.name}-${item.quantity}`);
       }
     }
 
