@@ -1248,7 +1248,8 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
           );
 
           // Add appropriate indentation for ice cream items
-          const brandIndent = item.isIceCream ? '  ' : '';
+          // Ice cream subcategory brands should be at the same level as regular ice cream items
+          const brandIndent = item.isIceCream ? '' : '';
           formattedListArray.push(`${brandIndent}${brand}:`);
 
           if (isBeverageCategory) {
@@ -1266,7 +1267,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
 
             // Add regular subcategory items first
             for (const [subcategory, quantity] of Object.entries(regularItems)) {
-              const itemIndent = item.isIceCream ? '    ' : '  ';
+              const itemIndent = item.isIceCream ? '  ' : '  ';
               formattedListArray.push(`${itemIndent}${subcategory}-${quantity}`);
             }
 
@@ -1320,7 +1321,7 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
           } else {
             // Regular subcategory grouping for non-beverages
             for (const [subcategory, quantity] of Object.entries(subcategories)) {
-              const itemIndent = item.isIceCream ? '    ' : '  ';
+              const itemIndent = item.isIceCream ? '  ' : '  ';
               formattedListArray.push(`${itemIndent}${subcategory}-${quantity}`);
             }
           }
