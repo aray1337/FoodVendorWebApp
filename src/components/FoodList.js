@@ -1028,27 +1028,6 @@ const FoodList = ({ filteredFoodItems, setFilteredFoodItems, showInterstitialAd}
         await navigator.clipboard.writeText(message);
         alert('Food list copied to clipboard!');
       }
-
-      // Clear the selected items and history after successful sharing
-      setSelectedItems({});
-      setSelectedItemsHistory([]);
-      setIsListDirty(true);
-      
-      // Clear from storage as well
-      try {
-        await storage.save({
-          key: 'selectedItems',
-          data: {},
-          expires: null,
-        });
-        await storage.save({
-          key: 'selectedItemsHistory',
-          data: [],
-          expires: null,
-        });
-      } catch (error) {
-        console.error('Error clearing selected items from storage:', error);
-      }
       
     } catch (error) {
       alert('Empty Food List. Add food items before sharing.');
